@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BoursePulse AI v2.6.0 — دستیار هوشمند بورس</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BoursePulse v2.6" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#090d16" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="logo_B_v2.6.0.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="logo_B_v2.6.0.png" />
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #11192c;
+      --card-2: #17223b;
+      --text: #f3f6fc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --border: rgba(255, 255, 255, 0.09);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 32px);
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Vazirmatn", sans-serif;
+    }
+    .container { max-width: 1280px; margin: 0 auto; }
+    .topbar {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo-box {
+      width: 48px; height: 48px; border-radius: 13px; overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.45); flex-shrink: 0; background: #10182a;
+    }
+    .logo-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .app-title { font-size: 1.12rem; font-weight: 800; }
+    .badge {
+      background: rgba(56, 189, 248, 0.16); color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 999px;
+      padding: 2px 9px; font-size: 0.72rem; font-weight: 700;
+    }
+    .badge.ok {
+      background: rgba(34, 197, 94, 0.16); color: #86efac; border-color: rgba(34, 197, 94, 0.4);
+    }
+    .subtitle { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .toolbar, .subbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .subbar { justify-content: space-between; margin-top: 12px; }
+    .cat-bar { display: flex; flex-wrap: wrap; gap: 6px; }
+    select, input, button {
+      background: var(--card-2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px 11px; font-size: 0.84rem;
+    }
+    button { cursor: pointer; font-weight: 600; }
+    button.primary { background: var(--accent); color: #041019; border: none; font-weight: 800; }
+    button.active-pill { border-color: var(--accent); background: rgba(56, 189, 248, 0.18); }
+    button.mini-btn { padding: 4px 8px; font-size: 0.74rem; border-radius: 8px; }
+    .layout { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 12px; }
+    @media (min-width: 920px) {
+      .layout.split-wide { grid-template-columns: 1.55fr 1fr; }
+    }
+    .ticker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 12px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px;
+    }
+    .card.selected { border-color: var(--accent); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .card-actions { display: flex; align-items: center; gap: 4px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .sym-fa { font-size: 1.18rem; font-weight: 900; }
+    .muted { color: var(--muted); font-size: 0.8rem; }
+    .pos { color: var(--green); font-weight: 700; }
+    .neg { color: var(--red); font-weight: 700; }
+    .neu { color: var(--amber); font-weight: 700; }
+    .kv { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .kv:last-child { border-bottom: none; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 8px; }
+    .switch-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem;
+    }
+    .switch-row:last-child { border-bottom: none; }
+    .reminder-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      background: var(--card-2); border-radius: 10px; padding: 8px 10px; margin-top: 8px; font-size: 0.82rem;
+    }
+    .banner {
+      background: rgba(34, 197, 94, 0.14); border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #dcfce7; border-radius: 12px; padding: 10px 12px; font-size: 0.82rem; margin-top: 10px; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="appRoot">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo-box">
+          <img src="logo_B_v2.6.0.png" alt="BoursePulse AI Logo B" />
+        </div>
+        <div>
+          <div class="title-row">
+            <span class="app-title" id="appTitle">BoursePulse AI</span>
+            <span class="badge">v2.6.0</span>
+            <span class="badge ok" id="countBadge">56 Symbols</span>
+          </div>
+          <div class="subtitle" id="subTitle">Tehran Stock Exchange &amp; IFB • iOS Home Screen PWA</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Search فولاد / وپارس..." oninput="render()" />
+        <select id="sortSel" onchange="updateSetting('sortMode', this.value)">
+          <option value="manual" data-en="Sort: Manual (Custom Order)" data-fa="ترتیب: دستی (سفارشی)">Sort: Manual (Custom Order)</option>
+          <option value="az" data-en="Sort: A → Z / الفبایی" data-fa="ترتیب: الفبایی (الف تا ی / A–Z)">Sort: A → Z / الفبایی</option>
+          <option value="za" data-en="Sort: Z → A / معکوس" data-fa="ترتیب: معکوس (ی تا الف / Z–A)">Sort: Z → A / معکوس</option>
+        </select>
+        <select id="horizonSel" onchange="updateSetting('horizon', this.value)">
+          <option value="short_term" data-en="Short-Term" data-fa="کوتاه‌مدت">Short-Term</option>
+          <option value="long_term" data-en="Long-Term" data-fa="بلندمدت">Long-Term</option>
+        </select>
+        <select id="riskSel" onchange="updateSetting('risk', this.value)">
+          <option value="conservative" data-en="Conservative" data-fa="کم‌ریسک">Conservative</option>
+          <option value="balanced" data-en="Balanced" data-fa="متعادل">Balanced</option>
+          <option value="aggressive" data-en="Aggressive" data-fa="پرریسک">Aggressive</option>
+        </select>
+        <button id="currBtn" onclick="toggleCurrency()">IRT</button>
+        <button id="watchBtn" onclick="toggleWatchOnly()">⭐ Watchlist</button>
+        <button id="splitBtn" onclick="toggleSplitView()">iPad Split</button>
+        <button id="notifBtn" onclick="toggleBackgroundAlerts()">🔔 Alerts</button>
+        <button class="primary" id="langBtn" onclick="toggleLang()">فا</button>
+      </div>
+    </div>
+
+    <div class="subbar">
+      <div class="cat-bar" id="catBar"></div>
+      <div class="muted" id="sortHint">Tip: Use ▲ / ▼ on any card to reorder manually (automatically switches to Manual).</div>
+    </div>
+
+    <div class="banner" id="toastBanner"></div>
+
+    <div class="layout split-wide" id="mainLayout">
+      <div>
+        <div class="ticker-grid" id="tickerGrid"></div>
+      </div>
+
+      <div>
+        <div class="card" id="detailCard"></div>
+
+        <!-- Add Custom Persian Ticker Card -->
+        <div class="card mt-12">
+          <div class="row">
+            <strong id="addSymHeading">+ Add Custom Persian Symbol</strong>
+          </div>
+          <div class="form-grid">
+            <input type="text" id="newSymFa" placeholder="نماد (مثلاً وسپهر)" />
+            <input type="text" id="newNameFa" placeholder="نام شرکت / صندوق" />
+            <input type="number" id="newPriceIrr" placeholder="قیمت (ریال)" />
+            <select id="newCatSel">
+              <option value="equity" data-en="Equity (سهام)" data-fa="سهام">Equity</option>
+              <option value="etf_gold" data-en="Gold ETF (طلا)" data-fa="صندوق طلا">Gold ETF</option>
+              <option value="etf_fixed" data-en="Fixed ETF (درآمد ثابت)" data-fa="درآمد ثابت">Fixed ETF</option>
+              <option value="etf_lev" data-en="Leveraged ETF (اهرمی)" data-fa="صندوق اهرمی">Leveraged ETF</option>
+              <option value="bond" data-en="Treasury Bill (اخزا)" data-fa="اسناد خزانه">Treasury Bill</option>
+            </select>
+            <button class="primary" id="addSymBtn" onclick="addCustomSymbol()">Add</button>
+          </div>
+        </div>
+
+        <!-- Persistence & Lock-Screen Notifications -->
+        <div class="card mt-12">
+          <div class="row">
+            <strong id="prefHeading">Persistence &amp; Lock-Screen Notifications</strong>
+            <button id="saveNowBtn" onclick="manualFlushSave()">Save Now</button>
+          </div>
+
+          <div class="switch-row">
+            <span id="lblAutoSaveSwitch">Save settings when switching between apps or closing the app</span>
+            <input type="checkbox" id="chkAutoSave" onchange="toggleAutoSaveOnLifecycle(this.checked)" />
+          </div>
+
+          <div class="switch-row">
+            <span id="lblBgNotifSwitch">Enable alerts &amp; reminders when closed or device locked</span>
+            <input type="checkbox" id="chkBgNotif" onchange="toggleBgNotifOption(this.checked)" />
+          </div>
+        </div>
+
+        <!-- Calculator Card -->
+        <div class="card mt-12">
+          <div class="row">
+            <strong id="calcHeading">Position &amp; Risk Calculator</strong>
+            <span class="muted" id="calcRiskTag"></span>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label class="muted" id="lblCap">Capital (IRR)</label>
+              <input type="number" id="calcCap" oninput="saveCalcInputs()" />
+            </div>
+            <div>
+              <label class="muted" id="lblEntry">Entry (IRR)</label>
+              <input type="number" id="calcEntry" oninput="saveCalcInputs()" />
+            </div>
+            <div>
+              <label class="muted" id="lblStop">Stop-Loss (IRR)</label>
+              <input type="number" id="calcStop" oninput="saveCalcInputs()" />
+            </div>
+          </div>
+          <div class="kv mt-8">
+            <span id="lblShares">Recommended Shares</span>
+            <strong id="outShares">0</strong>
+          </div>
+          <div class="kv">
+            <span id="lblAlloc">Allocated Capital</span>
+            <strong id="outAlloc">0</strong>
+          </div>
+        </div>
+
+        <!-- Reminders Card -->
+        <div class="card mt-12">
+          <div class="row">
+            <strong id="remHeading">Alerts &amp; Reminders</strong>
+            <span class="badge ok" id="remBadge">Enabled</span>
+          </div>
+          <div class="form-grid">
+            <input type="text" id="remNote" placeholder="Reminder note (e.g. Check فولاد)" />
+            <input type="number" id="remDelaySec" value="10" min="2" max="86400" />
+            <button class="primary" id="addRemBtn" onclick="addReminder()">+ Add Reminder</button>
+          </div>
+          <div id="remindersList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "boursepulse_ios_pwa_v260_56syms";
+
+    const DEFAULT_MARKET_DATA = [
+      // Previously Added & Core Symbols (36)
+      { sym: "وپارس", cat: "equity", en: "Parsian Bank", fa: "بانک پارسیان", priceIrr: 2940, chg: 1.45, sig: "BUY", power: "1.34x", baseVolPct: 118.4, noteEn: "Banking group liquidity watch.", noteFa: "بررسی نقدینگی گروه بانکی." },
+      { sym: "مارون", cat: "equity", en: "Marun Petrochemical", fa: "پتروشیمی مارون", priceIrr: 86400, chg: 1.92, sig: "BUY", power: "1.47x", baseVolPct: 126.5, noteEn: "Ethylene & polymer output steady.", noteFa: "تداوم تولید اتیلن و پلیمر." },
+      { sym: "همراه", cat: "equity", en: "MCI Mobile", fa: "ارتباطات سیار ایران", priceIrr: 14950, chg: 1.48, sig: "BUY", power: "1.31x", baseVolPct: 117.2, noteEn: "Recurring mobile data revenue.", noteFa: "رشد درآمد دیتای موبایل." },
+      { sym: "داسوه", cat: "equity", en: "Dasouh", fa: "داسوه", priceIrr: 6230, chg: 1.15, sig: "HOLD", power: "1.16x", baseVolPct: 111.0, noteEn: "Watch volume confirmation.", noteFa: "نیاز به تایید حجم معاملات." },
+      { sym: "فولاد", cat: "equity", en: "Mobarakeh Steel", fa: "فولاد مبارکه اصفهان", priceIrr: 4820, chg: 2.85, sig: "BUY", power: "1.68x", baseVolPct: 154.2, noteEn: "Strong real buyer inflow above base volume.", noteFa: "قدرت خریدار حقیقی بالا همراه با عبور از حجم مبنا." },
+      { sym: "طلا", cat: "etf_gold", en: "Tala Gold ETF", fa: "صندوق طلای طلا", priceIrr: 46800, chg: 1.88, sig: "BUY", power: "1.41x", baseVolPct: 100.0, noteEn: "Tracks domestic gold market.", noteFa: "همگام با بازار طلای داخلی." },
+      { sym: "گنج", cat: "etf_gold", en: "Ganj Gold ETF", fa: "صندوق طلای گنج", priceIrr: 51900, chg: 1.76, sig: "BUY", power: "1.38x", baseVolPct: 100.0, noteEn: "Gold-backed ETF; monitor NAV.", noteFa: "صندوق مبتنی بر طلا؛ بررسی NAV." },
+      { sym: "گوهر", cat: "etf_gold", en: "Gohar Gold ETF", fa: "صندوق طلای گوهر", priceIrr: 38700, chg: 1.95, sig: "BUY", power: "1.44x", baseVolPct: 100.0, noteEn: "Active gold ETF liquidity.", noteFa: "نقدشوندگی مناسب صندوق طلا." },
+      { sym: "زاگرس", cat: "equity", en: "Zagros Petrochemical", fa: "پتروشیمی زاگرس", priceIrr: 118400, chg: 1.12, sig: "HOLD", power: "1.19x", baseVolPct: 112.0, noteEn: "Methanol pricing & gas feedstock rate key.", noteFa: "نرخ متانول جهانی و نرخ خوراک کلیدی است." },
+      { sym: "سینرژی", cat: "equity", en: "Sinergy", fa: "سرمایه‌گذاری سینرژی", priceIrr: 5890, chg: 1.24, sig: "HOLD", power: "1.18x", baseVolPct: 113.2, noteEn: "Watch support and order depth.", noteFa: "بررسی حمایت و عمق سفارش‌ها." },
+      { sym: "شخارک", cat: "equity", en: "Khark Petrochemical", fa: "پتروشیمی خارک", priceIrr: 104200, chg: 1.65, sig: "BUY", power: "1.36x", baseVolPct: 120.4, noteEn: "LPG & NGL export dynamics.", noteFa: "تحولات صادرات محصولات گازی و مایع." },
+      { sym: "شفن", cat: "equity", en: "Fanavaran Petrochemical", fa: "پتروشیمی فن‌آوران", priceIrr: 79800, chg: 1.52, sig: "BUY", power: "1.33x", baseVolPct: 119.0, noteEn: "Methanol & acetic acid exposure.", noteFa: "محصولات متانول و اسید استیک." },
+      { sym: "شگامرن", cat: "equity", en: "Gamaran", fa: "شگامرن", priceIrr: 4320, chg: -0.65, sig: "HOLD", power: "0.96x", baseVolPct: 104.8, noteEn: "Consolidating near recent range.", noteFa: "نوسان در محدوده فعلی." },
+      { sym: "فایرا", cat: "equity", en: "Iran Alumina", fa: "آلومینای ایران", priceIrr: 12450, chg: 1.80, sig: "BUY", power: "1.42x", baseVolPct: 124.0, noteEn: "Alumina & aluminum chain demand.", noteFa: "تقاضا در زنجیره آلومینا و آلومینیوم." },
+      { sym: "ومعادن", cat: "equity", en: "Omid Investment (Madan)", fa: "سرمایه‌گذاری توسعه معادن و فلزات", priceIrr: 6720, chg: 2.08, sig: "BUY", power: "1.49x", baseVolPct: 129.8, noteEn: "Mining & steel holding exposure.", noteFa: "پرتفوی متمرکز بر معدن و فولاد." },
+      { sym: "تجلی", cat: "equity", en: "Tajalli", fa: "تجلی", priceIrr: 3890, chg: 0.85, sig: "HOLD", power: "1.12x", baseVolPct: 109.6, noteEn: "Moderate turnover; check resistance.", noteFa: "حجم معاملات متعادل؛ مقاومت بررسی شود." },
+      { sym: "رزترنج", cat: "equity", en: "Raz Toranj", fa: "رزترنج", priceIrr: 5120, chg: -1.10, sig: "HOLD", power: "0.91x", baseVolPct: 106.2, noteEn: "Short-term pullback; watch support.", noteFa: "اصلاح کوتاه‌مدت؛ حمایت زیر نظر باشد." },
+      { sym: "حکشتی", cat: "equity", en: "IRISL Shipping", fa: "کشتیرانی جمهوری اسلامی ایران", priceIrr: 4590, chg: 1.72, sig: "BUY", power: "1.39x", baseVolPct: 123.5, noteEn: "Maritime freight & trade volume.", noteFa: "حجم مبادلات و نرخ حمل دریایی." },
+      { sym: "شبریز", cat: "equity", en: "Tabriz Oil Refining", fa: "پالایش نفت تبریز", priceIrr: 5740, chg: 1.38, sig: "BUY", power: "1.29x", baseVolPct: 118.6, noteEn: "Refining crack spreads & volume.", noteFa: "حاشیه سود پالایشی و حجم معاملات." },
+      { sym: "شبندر", cat: "equity", en: "Bandar Abbas Refining", fa: "پالایش نفت بندرعباس", priceIrr: 6480, chg: 1.62, sig: "BUY", power: "1.39x", baseVolPct: 122.4, noteEn: "Export crack spread supporting earnings.", noteFa: "حاشیه سود صادراتی مطلوب." },
+      { sym: "شپترو", cat: "equity", en: "Petrochemical Industries", fa: "صنایع پتروشیمی", priceIrr: 7190, chg: 1.29, sig: "HOLD", power: "1.22x", baseVolPct: 115.4, noteEn: "Watch petrochemical index momentum.", noteFa: "بررسی شتاب شاخص گروه پتروشیمی." },
+      { sym: "شپلی", cat: "equity", en: "Shapli", fa: "شپلی", priceIrr: 3650, chg: 0.60, sig: "HOLD", power: "1.09x", baseVolPct: 107.1, noteEn: "Range-bound trading.", noteFa: "معاملات در بازه محدود." },
+      { sym: "شپنا", cat: "equity", en: "Isfahan Refining", fa: "پالایش نفت اصفهان", priceIrr: 5310, chg: 0.76, sig: "HOLD", power: "1.21x", baseVolPct: 111.8, noteEn: "Steady refining margin; watch volume.", noteFa: "حاشیه پالایش باثبات؛ حجم را بررسی کنید." },
+      { sym: "شتران", cat: "equity", en: "Tehran Refining", fa: "پالایش نفت تهران", priceIrr: 4190, chg: 1.15, sig: "BUY", power: "1.28x", baseVolPct: 118.0, noteEn: "Accumulation in refining group.", noteFa: "ورود نقدینگی به گروه پالایشی." },
+      { sym: "شیراز", cat: "equity", en: "Shiraz Petrochemical", fa: "پتروشیمی شیراز", priceIrr: 92400, chg: 1.44, sig: "BUY", power: "1.32x", baseVolPct: 117.9, noteEn: "Urea & ammonia production steady.", noteFa: "تولید اوره و آمونیا باثبات." },
+      { sym: "ونفت", cat: "equity", en: "Naft Investment", fa: "سرمایه‌گذاری صنعت نفت", priceIrr: 4980, chg: 1.56, sig: "BUY", power: "1.35x", baseVolPct: 120.2, noteEn: "Oil & petrochemical holding portfolio.", noteFa: "پرتفوی هلدینگ نفت و پتروشیمی." },
+      { sym: "رتاپ", cat: "equity", en: "Retap", fa: "رتاپ", priceIrr: 6820, chg: 0.94, sig: "HOLD", power: "1.15x", baseVolPct: 110.3, noteEn: "Monitor trendline support.", noteFa: "رصد حمایت خط روند." },
+      { sym: "یاس", cat: "equity", en: "Yas", fa: "یاس", priceIrr: 3290, chg: -0.42, sig: "HOLD", power: "0.98x", baseVolPct: 103.5, noteEn: "Low volatility session.", noteFa: "نوسان محدود در معاملات." },
+      { sym: "فملی", cat: "equity", en: "National Copper", fa: "ملی صنایع مس ایران", priceIrr: 7940, chg: 2.15, sig: "BUY", power: "1.54x", baseVolPct: 129.1, noteEn: "Positive monthly Codal production trend.", noteFa: "روند مثبت تولید در گزارش ماهانه کدال." },
+      { sym: "خودرو", cat: "equity", en: "Iran Khodro", fa: "ایران خودرو", priceIrr: 2610, chg: -1.45, sig: "SELL", power: "0.78x", baseVolPct: 110.7, noteEn: "Supply pressure near resistance.", noteFa: "فشار عرضه در محدوده مقاومتی." },
+      { sym: "وبملت", cat: "equity", en: "Bank Mellat", fa: "بانک ملت", priceIrr: 3490, chg: -0.85, sig: "HOLD", power: "0.92x", baseVolPct: 115.8, noteEn: "Consolidation near support zone.", noteFa: "نوسان در محدوده حمایتی." },
+      { sym: "شستا", cat: "equity", en: "SSIC", fa: "سرمایه‌گذاری تامین اجتماعی", priceIrr: 2180, chg: 1.40, sig: "BUY", power: "1.35x", baseVolPct: 126.2, noteEn: "Holding dividend inflows across subsidiaries.", noteFa: "دریافت سود تقسیمی شرکت‌های زیرمجموعه." },
+      { sym: "عیار", cat: "etf_gold", en: "Ayar Gold ETF", fa: "صندوق طلای عیار مفید", priceIrr: 54200, chg: 1.92, sig: "BUY", power: "1.42x", baseVolPct: 100.0, noteEn: "High liquidity gold ETF; monitor NAV bubble.", noteFa: "نقدشوندگی بالا؛ حباب NAV بررسی شود." },
+      { sym: "اهرم", cat: "etf_lev", en: "Ahrom Leveraged ETF", fa: "صندوق اهرمی کاریزما", priceIrr: 22450, chg: 3.40, sig: "BUY", power: "1.85x", baseVolPct: 100.0, noteEn: "High beta upside; enforce strict stop-loss.", noteFa: "بتای بالا در روند صعودی؛ حد ضرر رعایت شود." },
+      { sym: "کمند", cat: "etf_fixed", en: "Kamand Fixed-Income ETF", fa: "صندوق درآمد ثابت کمند", priceIrr: 10345, chg: 0.08, sig: "HOLD", power: "1.05x", baseVolPct: 100.0, noteEn: "Low-volatility daily accrual yield.", noteFa: "سود روزشمار با نوسان بسیار کم." },
+      { sym: "اخزا۲۱۱", cat: "bond", en: "Treasury Bill 211", fa: "اسناد خزانه اسلامی ۲۱۱", priceIrr: 864000, chg: 0.11, sig: "HOLD", power: "1.12x", baseVolPct: 100.0, noteEn: "Fixed maturity value (1,000,000 IRR) at maturity.", noteFa: "ارزش اسمی ۱,۰۰۰,۰۰۰ ریال در سررسید." },
+
+      // +20 Additional Most-Traded TSE & IFB Stocks (بیشترین ارزش و حجم معاملات)
+      { sym: "خساپا", cat: "equity", en: "SAIPA Corp.", fa: "سایپا", priceIrr: 2140, chg: -0.95, sig: "HOLD", power: "0.89x", baseVolPct: 142.3, noteEn: "High retail turnover; watch support.", noteFa: "گردش معاملاتی بالا؛ حمایت بررسی شود." },
+      { sym: "وتجارت", cat: "equity", en: "Tejarat Bank", fa: "بانک تجارت", priceIrr: 2380, chg: 0.82, sig: "HOLD", power: "1.14x", baseVolPct: 131.5, noteEn: "High-volume banking heavyweight.", noteFa: "نماد پرتراکنش گروه بانکی." },
+      { sym: "وبصادر", cat: "equity", en: "Bank Saderat", fa: "بانک صادرات ایران", priceIrr: 2190, chg: 0.45, sig: "HOLD", power: "1.06x", baseVolPct: 124.0, noteEn: "Active order book; watch breakout.", noteFa: "عمق معاملات بالا؛ شکست مقاومت رصد شود." },
+      { sym: "فارس", cat: "equity", en: "Persian Gulf Petrochemical", fa: "صنایع پتروشیمی خلیج فارس", priceIrr: 6120, chg: 1.55, sig: "BUY", power: "1.38x", baseVolPct: 127.4, noteEn: "Index heavyweight with steady institutional demand.", noteFa: "لیدر شاخص‌ساز با تقاضای حقوقی و حقیقی." },
+      { sym: "نوری", cat: "equity", en: "Nouri Petrochemical", fa: "پتروشیمی نوری", priceIrr: 94200, chg: 2.05, sig: "BUY", power: "1.49x", baseVolPct: 128.6, noteEn: "High aromatics export revenue.", noteFa: "درآمد صادراتی بالای محصولات آروماتیک." },
+      { sym: "پارس", cat: "equity", en: "Pars Petrochemical", fa: "پتروشیمی پارس", priceIrr: 68500, chg: 1.18, sig: "BUY", power: "1.26x", baseVolPct: 116.8, noteEn: "Defensive dividend-paying petrochemical.", noteFa: "نماد بنیادی و سودده گروه پتروشیمی." },
+      { sym: "آریا", cat: "equity", en: "Arya Sasol Polymer", fa: "پلیمر آریا ساسول", priceIrr: 82300, chg: 1.65, sig: "BUY", power: "1.38x", baseVolPct: 121.0, noteEn: "Strong polyethylene margins.", noteFa: "حاشیه سود مناسب پلی‌اتیلن." },
+      { sym: "وغدیر", cat: "equity", en: "Ghadir Investment", fa: "سرمایه‌گذاری غدیر", priceIrr: 9850, chg: 1.88, sig: "BUY", power: "1.44x", baseVolPct: 131.5, noteEn: "Attractive NAV discount in energy/metals.", noteFa: "تخفیف مناسب نسبت به NAV و پرتفوی انرژی." },
+      { sym: "کگل", cat: "equity", en: "Golgohar Mining", fa: "معدنی و صنعتی گل‌گهر", priceIrr: 8720, chg: 2.30, sig: "BUY", power: "1.51x", baseVolPct: 134.0, noteEn: "Pellet sales growth in monthly filing.", noteFa: "رشد فروش گندله در گزارش ماهانه." },
+      { sym: "کچاد", cat: "equity", en: "Chadormalu Mining", fa: "معدنی و صنعتی چادرملو", priceIrr: 7650, chg: 1.75, sig: "BUY", power: "1.37x", baseVolPct: 124.8, noteEn: "Steady iron ore & steel margins.", noteFa: "حاشیه سود پایدار در زنجیره سنگ‌آهن." },
+      { sym: "فخوز", cat: "equity", en: "Khuzestan Steel", fa: "فولاد خوزستان", priceIrr: 5410, chg: 1.95, sig: "BUY", power: "1.46x", baseVolPct: 127.3, noteEn: "Export billet demand lifting buyer power.", noteFa: "تقاضای صادراتی شمش و افزایش قدرت خریدار." },
+      { sym: "ذوب", cat: "equity", en: "Esfahan Steel Co.", fa: "ذوب‌آهن اصفهان", priceIrr: 3180, chg: 1.60, sig: "BUY", power: "1.33x", baseVolPct: 138.2, noteEn: "High retail liquidity & rebar demand.", noteFa: "نقدشوندگی بالای حقیقی و تقاضای میلگرد." },
+      { sym: "هرمز", cat: "equity", en: "Hormozgan Steel", fa: "فولاد هرمزگان جنوب", priceIrr: 5890, chg: 1.84, sig: "BUY", power: "1.41x", baseVolPct: 125.9, noteEn: "Strong slab export margins.", noteFa: "حاشیه سود مناسب صادرات اسلب." },
+      { sym: "کاوه", cat: "equity", en: "Kaveh South Kish Steel", fa: "فولاد کاوه جنوب کیش", priceIrr: 6340, chg: 1.50, sig: "BUY", power: "1.32x", baseVolPct: 121.4, noteEn: "Consistent monthly Codal sales.", noteFa: "تداوم فروش ماهانه مطلوب در کدال." },
+      { sym: "وسپهر", cat: "equity", en: "Sepehr Saderat Financial", fa: "گروه مالی سپهر صادرات", priceIrr: 4760, chg: 1.70, sig: "BUY", power: "1.36x", baseVolPct: 126.7, noteEn: "High-turnover financial holding.", noteFa: "هلدینگ مالی پرمعامله با تقاضای مناسب." },
+      { sym: "خگستر", cat: "equity", en: "Gostaresh Investment", fa: "گسترش سرمایه‌گذاری ایران خودرو", priceIrr: 2890, chg: -0.70, sig: "HOLD", power: "0.94x", baseVolPct: 133.1, noteEn: "Tracks automotive sector sentiment.", noteFa: "همسو با فضای معاملاتی گروه خودرویی." },
+      { sym: "خزامیا", cat: "equity", en: "Zamyad", fa: "زامیاد", priceIrr: 3420, chg: 1.25, sig: "HOLD", power: "1.18x", baseVolPct: 129.0, noteEn: "Active trading volume in commercial vehicles.", noteFa: "حجم معاملات بالا در خودروهای تجاری." },
+      { sym: "اخابر", cat: "equity", en: "Telecommunication Co.", fa: "مخابرات ایران", priceIrr: 4280, chg: 0.95, sig: "HOLD", power: "1.15x", baseVolPct: 116.5, noteEn: "Tariff adjustment catalyst.", noteFa: "پتانسیل تعدیل تعرفه‌های مخابراتی." },
+      { sym: "برکت", cat: "equity", en: "Barkat Pharmaceutical", fa: "گروه دارویی برکت", priceIrr: 5640, chg: 1.42, sig: "BUY", power: "1.30x", baseVolPct: 122.8, noteEn: "Pharma sector leader with high turnover.", noteFa: "لیدر پرمعامله گروه دارویی." },
+      { sym: "ثشاهد", cat: "equity", en: "Shahed Construction", fa: "سرمایه‌گذاری شاهد", priceIrr: 6910, chg: 1.35, sig: "BUY", power: "1.27x", baseVolPct: 120.5, noteEn: "Real estate & construction group leader.", noteFa: "نماد شاخص و پرحجم گروه انبوه‌سازی." }
+    ];
+
+    const DEFAULT_STATE = {
+      version: "2.6.0",
+      lang: "en",
+      currency: "irt",
+      horizon: "short_term",
+      risk: "balanced",
+      category: "all",
+      sortMode: "manual",
+      manualOrder: DEFAULT_MARKET_DATA.map(x => x.sym),
+      watchOnly: false,
+      splitWide: true,
+      saveOnSwitchOrClose: true,
+      notifyWhenClosedOrLocked: true,
+      selectedSymbol: "فولاد",
+      watchlist: ["وپارس", "مارون", "فولاد", "طلا", "گنج", "گوهر", "ومعادن", "حکشتی", "فملی", "فارس"],
+      customSymbols: [],
+      calc: { capitalIrr: 5000000000, entryIrr: 4820, stopIrr: 4600 },
+      reminders: []
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = { ...structuredClone(DEFAULT_STATE), ...JSON.parse(raw) };
+        const allSyms = [...DEFAULT_MARKET_DATA, ...(parsed.customSymbols || [])].map(x => x.sym);
+        const existingOrder = Array.isArray(parsed.manualOrder) ? parsed.manualOrder.filter(s => allSyms.includes(s)) : [];
+        const missingSyms = allSyms.filter(s => !existingOrder.includes(s));
+        parsed.manualOrder = [...existingOrder, ...missingSyms];
+        return parsed;
+      } catch (e) {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    let STATE = loadState();
+
+    function getAllSymbols() {
+      return [...DEFAULT_MARKET_DATA, ...(STATE.customSymbols || [])];
+    }
+
+    function getOrderedSymbols() {
+      const all = getAllSymbols();
+      if (STATE.sortMode === "az") {
+        return [...all].sort((a, b) => a.sym.localeCompare(b.sym, ["fa", "en"], { sensitivity: "base" }));
+      }
+      if (STATE.sortMode === "za") {
+        return [...all].sort((a, b) => b.sym.localeCompare(a.sym, ["fa", "en"], { sensitivity: "base" }));
+      }
+      const orderMap = new Map((STATE.manualOrder || []).map((sym, idx) => [sym, idx]));
+      return [...all].sort((a, b) => {
+        const ia = orderMap.has(a.sym) ? orderMap.get(a.sym) : 999999;
+        const ib = orderMap.has(b.sym) ? orderMap.get(b.sym) : 999999;
+        return ia - ib;
+      });
+    }
+
+    function moveSymbol(sym, delta, ev) {
+      ev.stopPropagation();
+      const ordered = getOrderedSymbols().map(x => x.sym);
+      const idx = ordered.indexOf(sym);
+      if (idx === -1) return;
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= ordered.length) return;
+      const [item] = ordered.splice(idx, 1);
+      ordered.splice(targetIdx, 0, item);
+      STATE.manualOrder = ordered;
+      STATE.sortMode = "manual";
+      persistIfEnabled();
+      render();
+    }
+
+    function writeStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      } catch (e) {}
+    }
+
+    function persistIfEnabled() {
+      if (STATE.saveOnSwitchOrClose) writeStorage();
+    }
+
+    function manualFlushSave() {
+      writeStorage();
+      showBanner(STATE.lang === "fa" ? "تنظیمات، ترتیب نمادها و یادآورها ذخیره شدند." : "Settings, symbol order & reminders saved.");
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        persistIfEnabled();
+        processDueReminders(true);
+      } else {
+        processDueReminders(false);
+      }
+    });
+    window.addEventListener("pagehide", () => {
+      persistIfEnabled();
+      processDueReminders(true);
+    });
+    window.addEventListener("beforeunload", persistIfEnabled);
+
+    function showBanner(msg) {
+      const el = document.getElementById("toastBanner");
+      el.textContent = msg;
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, 3600);
+    }
+
+    function fmtMoney(irr) {
+      const v = STATE.currency === "irt" ? Math.round(irr / 10) : Math.round(irr);
+      const unit = STATE.lang === "fa"
+        ? (STATE.currency === "irt" ? "تومان" : "ریال")
+        : STATE.currency.toUpperCase();
+      return v.toLocaleString("en-US") + " " + unit;
+    }
+
+    function updateSetting(key, val) {
+      STATE[key] = val;
+      persistIfEnabled();
+      render();
+    }
+
+    function setCategory(cat) {
+      STATE.category = cat;
+      persistIfEnabled();
+      render();
+    }
+
+    function toggleAutoSaveOnLifecycle(checked) {
+      STATE.saveOnSwitchOrClose = checked;
+      writeStorage();
+      render();
+    }
+
+    async function toggleBgNotifOption(checked) {
+      STATE.notifyWhenClosedOrLocked = checked;
+      if (checked && "Notification" in window && Notification.permission === "default") {
+        try { await Notification.requestPermission(); } catch (e) {}
+      }
+      persistIfEnabled();
+      render();
+    }
+
+    async function toggleBackgroundAlerts() {
+      const next = !STATE.notifyWhenClosedOrLocked;
+      await toggleBgNotifOption(next);
+      showBanner(STATE.lang === "fa"
+        ? (next ? "هشدارها در حالت بسته بودن اپ و قفل صفحه فعال شد." : "هشدارها غیرفعال شد.")
+        : (next ? "Closed-app & lock-screen alerts enabled." : "Alerts disabled."));
+    }
+
+    function toggleLang() {
+      STATE.lang = STATE.lang === "en" ? "fa" : "en";
+      document.documentElement.lang = STATE.lang;
+      document.documentElement.dir = STATE.lang === "fa" ? "rtl" : "ltr";
+      persistIfEnabled();
+      render();
+    }
+
+    function toggleCurrency() {
+      STATE.currency = STATE.currency === "irt" ? "irr" : "irt";
+      persistIfEnabled();
+      render();
+    }
+
+    function toggleWatchOnly() {
+      STATE.watchOnly = !STATE.watchOnly;
+      persistIfEnabled();
+      render();
+    }
+
+    function toggleSplitView() {
+      STATE.splitWide = !STATE.splitWide;
+      persistIfEnabled();
+      render();
+    }
+
+    function toggleStar(sym, ev) {
+      ev.stopPropagation();
+      if (STATE.watchlist.includes(sym)) {
+        STATE.watchlist = STATE.watchlist.filter(x => x !== sym);
+      } else {
+        STATE.watchlist.push(sym);
+      }
+      persistIfEnabled();
+      render();
+    }
+
+    function selectTicker(sym) {
+      STATE.selectedSymbol = sym;
+      persistIfEnabled();
+      render();
+    }
+
+    function addCustomSymbol() {
+      const sym = document.getElementById("newSymFa").value.trim();
+      const nameFa = document.getElementById("newNameFa").value.trim() || sym;
+      const priceIrr = Number(document.getElementById("newPriceIrr").value || 0);
+      const cat = document.getElementById("newCatSel").value;
+      if (!sym || priceIrr <= 0) {
+        showBanner(STATE.lang === "fa" ? "لطفاً نماد فارسی و قیمت معتبر وارد کنید." : "Enter a Persian symbol and valid price.");
+        return;
+      }
+      const entry = {
+        sym,
+        cat,
+        en: sym,
+        fa: nameFa,
+        priceIrr,
+        chg: 0.0,
+        sig: "HOLD",
+        power: "1.00x",
+        baseVolPct: 100.0,
+        noteEn: "Custom added symbol.",
+        noteFa: "نماد اضافه‌شده توسط کاربر."
+      };
+      STATE.customSymbols = (STATE.customSymbols || []).filter(x => x.sym !== sym);
+      STATE.customSymbols.push(entry);
+      STATE.manualOrder = [sym, ...(STATE.manualOrder || []).filter(x => x !== sym)];
+      if (!STATE.watchlist.includes(sym)) STATE.watchlist.push(sym);
+      STATE.selectedSymbol = sym;
+      document.getElementById("newSymFa").value = "";
+      document.getElementById("newNameFa").value = "";
+      document.getElementById("newPriceIrr").value = "";
+      persistIfEnabled();
+      render();
+      showBanner(STATE.lang === "fa" ? `نماد ${sym} اضافه شد.` : `Added symbol ${sym}.`);
+    }
+
+    function dispatchNotification(title, body) {
+      if (!STATE.notifyWhenClosedOrLocked) return;
+      showBanner(`🔔 ${title}: ${body}`);
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(title, {
+            body,
+            icon: "logo_B_v2.6.0.png",
+            badge: "logo_B_v2.6.0.png",
+            tag: "boursepulse-ios-v260"
+          });
+        } catch (e) {}
+      }
+    }
+
+    function addReminder() {
+      const noteEl = document.getElementById("remNote");
+      const delayEl = document.getElementById("remDelaySec");
+      const text = noteEl.value.trim() || (STATE.lang === "fa" ? `یادآور نماد ${STATE.selectedSymbol}` : `Alert for ${STATE.selectedSymbol}`);
+      const delaySec = Math.max(2, parseInt(delayEl.value || "10", 10));
+      const id = String(Date.now());
+      const triggerAt = Date.now() + delaySec * 1000;
+      STATE.reminders.push({ id, text, triggerAt, fired: false });
+      noteEl.value = "";
+      persistIfEnabled();
+      renderReminders();
+      showBanner(STATE.lang === "fa" ? `یادآور پس از ${delaySec} ثانیه فعال می‌شود` : `Reminder scheduled in ${delaySec}s`);
+    }
+
+    function processDueReminders(fromBackground) {
+      if (!STATE.notifyWhenClosedOrLocked) return;
+      const now = Date.now();
+      let changed = false;
+      for (const r of STATE.reminders) {
+        if (!r.fired && now >= r.triggerAt) {
+          r.fired = true;
+          changed = true;
+          dispatchNotification(
+            STATE.lang === "fa" ? "یادآور بورس‌پالس" : "BoursePulse Reminder",
+            r.text
+          );
+        }
+      }
+      if (changed) {
+        persistIfEnabled();
+        if (!fromBackground) renderReminders();
+      }
+    }
+
+    function renderReminders() {
+      const isFa = STATE.lang === "fa";
+      const box = document.getElementById("remindersList");
+      if (!STATE.reminders.length) {
+        box.innerHTML = `<div class="muted mt-8">${isFa ? "یادآوری ثبت نشده است." : "No reminders set."}</div>`;
+        return;
+      }
+      box.innerHTML = STATE.reminders.map(r => {
+        const st = r.fired ? (isFa ? "ارسال شد" : "Triggered") : (isFa ? "در انتظار" : "Pending");
+        return `
+          <div class="reminder-item">
+            <span>${r.text}</span>
+            <span class="badge ${r.fired ? "ok" : ""}">${st}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function saveCalcInputs() {
+      STATE.calc.capitalIrr = Number(document.getElementById("calcCap").value || 0);
+      STATE.calc.entryIrr = Number(document.getElementById("calcEntry").value || 0);
+      STATE.calc.stopIrr = Number(document.getElementById("calcStop").value || 0);
+      persistIfEnabled();
+      renderCalc();
+    }
+
+    function renderCalc() {
+      const riskMap = { conservative: 0.01, balanced: 0.02, aggressive: 0.035 };
+      const pct = riskMap[STATE.risk] || 0.02;
+      const diff = Math.abs(STATE.calc.entryIrr - STATE.calc.stopIrr);
+      let shares = diff > 0 ? Math.floor((STATE.calc.capitalIrr * pct) / diff) : 0;
+      if (shares * STATE.calc.entryIrr > STATE.calc.capitalIrr && STATE.calc.entryIrr > 0) {
+        shares = Math.floor(STATE.calc.capitalIrr / STATE.calc.entryIrr);
+      }
+      const allocIrr = Math.max(0, shares * STATE.calc.entryIrr);
+      document.getElementById("calcRiskTag").textContent = `${(pct * 100).toFixed(1)}%`;
+      document.getElementById("outShares").textContent = shares.toLocaleString("en-US");
+      document.getElementById("outAlloc").textContent = fmtMoney(allocIrr);
+    }
+
+    function render() {
+      const isFa = STATE.lang === "fa";
+      document.documentElement.lang = STATE.lang;
+      document.documentElement.dir = isFa ? "rtl" : "ltr";
+
+      const orderedSymbols = getOrderedSymbols();
+      document.getElementById("appTitle").textContent = isFa ? "دستیار هوشمند بورس" : "BoursePulse AI";
+      document.getElementById("countBadge").textContent = isFa ? `${orderedSymbols.length} نماد` : `${orderedSymbols.length} Symbols`;
+      document.getElementById("subTitle").textContent = isFa
+        ? "بورس و فرابورس • مرتب‌سازی الفبایی و دستی • ذخیره خودکار"
+        : "TSE & IFB • A–Z & Manual Sorting • iOS Home Screen PWA";
+      document.getElementById("langBtn").textContent = isFa ? "EN" : "فا";
+      document.getElementById("currBtn").textContent = STATE.currency === "irt" ? (isFa ? "تومان" : "IRT") : (isFa ? "ریال" : "IRR");
+      document.getElementById("watchBtn").textContent = STATE.watchOnly ? (isFa ? "⭐ همه" : "⭐ All") : (isFa ? "⭐ دیده‌بان" : "⭐ Watchlist");
+      document.getElementById("splitBtn").classList.toggle("active-pill", STATE.splitWide);
+      document.getElementById("mainLayout").classList.toggle("split-wide", STATE.splitWide);
+      document.getElementById("sortHint").textContent = isFa
+        ? "راهنما: با دکمه‌های ▲ و ▼ روی هر کارت، نمادها را به ترتیب دلخواه جابه‌جا کنید."
+        : "Tip: Use ▲ / ▼ on any card to reorder manually (automatically switches to Manual).";
+
+      document.getElementById("sortSel").value = STATE.sortMode;
+      document.getElementById("horizonSel").value = STATE.horizon;
+      document.getElementById("riskSel").value = STATE.risk;
+      document.querySelectorAll("select option").forEach(o => { if (o.dataset.fa) o.textContent = isFa ? o.dataset.fa : o.dataset.en; });
+
+      const cats = [
+        { id: "all", en: "All", fa: "همه" },
+        { id: "equity", en: "Equities", fa: "سهام" },
+        { id: "etf_gold", en: "Gold ETFs", fa: "صندوق طلا" },
+        { id: "etf_lev", en: "Leveraged & Index ETFs", fa: "صندوق اهرمی" },
+        { id: "etf_fixed", en: "Fixed-Income ETFs", fa: "درآمد ثابت" },
+        { id: "bond", en: "Treasury Bills (اخزا)", fa: "اسناد خزانه" }
+      ];
+      document.getElementById("catBar").innerHTML = cats.map(c => `
+        <button class="${STATE.category === c.id ? "active-pill" : ""}" onclick="setCategory('${c.id}')">
+          ${isFa ? c.fa : c.en}
+        </button>
+      `).join("");
+
+      document.getElementById("addSymHeading").textContent = isFa ? "+ افزودن نماد فارسی دلخواه" : "+ Add Custom Persian Symbol";
+      document.getElementById("addSymBtn").textContent = isFa ? "افزودن" : "Add";
+
+      document.getElementById("prefHeading").textContent = isFa ? "گزینه‌های ذخیره تنظیمات و هشدارها" : "Persistence & Lock-Screen Notifications";
+      document.getElementById("saveNowBtn").textContent = isFa ? "ذخیره اکنون" : "Save Now";
+      document.getElementById("lblAutoSaveSwitch").textContent = isFa
+        ? "ذخیره تنظیمات هنگام جابه‌جایی بین برنامه‌ها یا بستن اپ"
+        : "Save settings when switching between apps or closing the app";
+      document.getElementById("lblBgNotifSwitch").textContent = isFa
+        ? "فعال‌سازی اعلان هشدارها و یادآورها در زمان بسته بودن اپ یا قفل بودن دستگاه"
+        : "Enable alerts & reminders when app is closed or device is locked";
+
+      document.getElementById("chkAutoSave").checked = STATE.saveOnSwitchOrClose;
+      document.getElementById("chkBgNotif").checked = STATE.notifyWhenClosedOrLocked;
+
+      document.getElementById("calcHeading").textContent = isFa ? "ماشین‌حساب حجم و ریسک" : "Position & Risk Calculator";
+      document.getElementById("lblCap").textContent = isFa ? "سرمایه (ریال)" : "Capital (IRR)";
+      document.getElementById("lblEntry").textContent = isFa ? "ورود (ریال)" : "Entry (IRR)";
+      document.getElementById("lblStop").textContent = isFa ? "حد ضرر (ریال)" : "Stop-Loss (IRR)";
+      document.getElementById("lblShares").textContent = isFa ? "تعداد پیشنهادی" : "Recommended Shares";
+      document.getElementById("lblAlloc").textContent = isFa ? "مبلغ تخصیص" : "Allocated Capital";
+
+      document.getElementById("calcCap").value = STATE.calc.capitalIrr;
+      document.getElementById("calcEntry").value = STATE.calc.entryIrr;
+      document.getElementById("calcStop").value = STATE.calc.stopIrr;
+
+      document.getElementById("remHeading").textContent = isFa ? "هشدارها و یادآورها" : "Alerts & Reminders";
+      document.getElementById("remBadge").textContent = STATE.notifyWhenClosedOrLocked ? (isFa ? "فعال" : "Enabled") : (isFa ? "غیرفعال" : "Off");
+      document.getElementById("addRemBtn").textContent = isFa ? "+ ثبت یادآور" : "+ Add Reminder";
+
+      const q = document.getElementById("searchInput").value.trim();
+      const filtered = orderedSymbols.filter(item => {
+        const cOk = STATE.category === "all" || item.cat === STATE.category;
+        const wOk = !STATE.watchOnly || STATE.watchlist.includes(item.sym);
+        const sOk = !q || item.sym.includes(q) || item.fa.includes(q);
+        return cOk && wOk && sOk;
+      });
+
+      document.getElementById("tickerGrid").innerHTML = filtered.map(item => {
+        const isSel = item.sym === STATE.selectedSymbol;
+        const starred = STATE.watchlist.includes(item.sym);
+        const chgCls = item.chg >= 0 ? "pos" : "neg";
+        const sigCls = item.sig === "BUY" ? "pos" : (item.sig === "SELL" ? "neg" : "neu");
+        return `
+          <div class="card ${isSel ? "selected" : ""}" onclick="selectTicker('${item.sym}')">
+            <div class="row">
+              <div>
+                <div class="sym-fa">${item.sym}</div>
+                <div class="muted">${isFa ? item.fa : item.en}</div>
+              </div>
+              <div class="card-actions">
+                <button class="mini-btn" title="Move Up" onclick="moveSymbol('${item.sym}', -1, event)">▲</button>
+                <button class="mini-btn" title="Move Down" onclick="moveSymbol('${item.sym}', 1, event)">▼</button>
+                <button class="mini-btn" onclick="toggleStar('${item.sym}', event)">${starred ? "⭐" : "☆"}</button>
+              </div>
+            </div>
+            <div class="row mt-8">
+              <strong>${fmtMoney(item.priceIrr)}</strong>
+              <span class="${chgCls}">${item.chg >= 0 ? "+" : ""}${item.chg.toFixed(2)}%</span>
+            </div>
+            <div class="row mt-8">
+              <span class="${sigCls}">${item.sig}</span>
+              <span class="muted">${isFa ? "قدرت خریدار:" : "Buyer Power:"} ${item.power}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const active = orderedSymbols.find(x => x.sym === STATE.selectedSymbol) || orderedSymbols[0];
+      document.getElementById("detailCard").innerHTML = `
+        <div class="row">
+          <div>
+            <div class="sym-fa">${active.sym}</div>
+            <div class="muted">${isFa ? active.fa : active.en}</div>
+          </div>
+          <button class="primary" onclick="dispatchNotification('${active.sym}', '${fmtMoney(active.priceIrr)} | ${active.sig}')">
+            ${isFa ? "ارسال هشدار" : "Send Alert"}
+          </button>
+        </div>
+        <div class="mt-12">
+          <div class="kv"><span>${isFa ? "قیمت آخرین معامله" : "Last Price"}</span><strong>${fmtMoney(active.priceIrr)}</strong></div>
+          <div class="kv"><span>${isFa ? "قدرت خریدار حقیقی" : "Real Buyer Power"}</span><strong>${active.power}</strong></div>
+          <div class="kv"><span>${isFa ? "حجم مبنا" : "Base Volume"}</span><strong>${active.baseVolPct}%</strong></div>
+          <div class="kv"><span>${isFa ? "تحلیل" : "Insight"}</span><span>${isFa ? active.noteFa : active.noteEn}</span></div>
+        </div>
+      `;
+
+      renderCalc();
+      renderReminders();
+    }
+
+    setInterval(() => processDueReminders(false), 1000);
+    render();
+  </script>
+</body>
+</html>
